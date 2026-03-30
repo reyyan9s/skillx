@@ -1,0 +1,32 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { 
+  -webkit-font-smoothing: antialiased; 
+  -moz-osx-font-smoothing: grayscale; 
+  text-rendering: optimizeLegibility; 
+  scroll-behavior: smooth; 
+  overflow-x: hidden !important; 
+  width: 100% !important; 
+  height: 100%;
+}
+body {
+  min-height: 100vh;
+  line-height: 1.5;
+  background-color: var(--bg-primary, #FAFAF9);
+  overflow-x: hidden !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative;
+}
+img, picture, video, canvas, svg { display: block; max-width: 100%; }
+input, button, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; border: none; background: none; }
+a { color: inherit; text-decoration: none; }
+ul, ol { list-style: none; }
+h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; line-height: 1.1; }
+p { overflow-wrap: break-word; }
+#app { 
+  min-height: 100vh; 
+  width: 100% !important;
+  overflow-x: hidden !important;
+}

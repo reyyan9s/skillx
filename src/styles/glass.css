@@ -1,0 +1,60 @@
+/* ═══════════════════════════════════════════════════════════════
+   GLASS MORPHISM SYSTEM
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── liquid-glass: subtle blur, soft highlight ── */
+.liquid-glass {
+  background: var(--glass-bg-light);
+  backdrop-filter: blur(8px) saturate(160%);
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: var(--glass-shadow);
+  transition: all var(--transition-slow);
+}
+
+/* Gradient border illusion via pseudo-element */
+.liquid-glass-border {
+  position: relative;
+}
+.liquid-glass-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.18) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── liquid-glass-strong: heavy blur, strong glow ── */
+.liquid-glass-strong {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(50px) saturate(200%);
+  -webkit-backdrop-filter: blur(50px) saturate(200%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow-strong);
+  transition: all var(--transition-slow);
+}
+
+/* Dark variant for dark section cards */
+.liquid-glass-dark {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
