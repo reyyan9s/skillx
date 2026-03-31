@@ -229,7 +229,7 @@ export function renderSidebar(activePage = 'overview') {
       { id: 'overview', label: 'Overview', icon: ICONS.grid, href: '#/dashboard/overview' },
       { id: 'projects', label: 'Projects', icon: ICONS.folder, href: '#/project/skillx-platform' },
       { id: 'passport', label: 'Passport', icon: ICONS.passport, href: `#/passport/${student.name.toLowerCase().replace(/\s+/g, '-')}` },
-      { id: 'report', label: 'Skill Report', icon: ICONS.report, href: '#/skill-report' },
+      { id: 'report', label: 'Resume Builder', icon: ICONS.report, href: '#/skill-report' },
       { id: 'settings', label: 'Settings', icon: ICONS.settings, href: '#/dashboard/settings' },
     ];
   }

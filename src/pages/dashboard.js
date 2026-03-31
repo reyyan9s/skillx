@@ -10,18 +10,30 @@ function generateHeatmapData(seed) {
   startDate.setDate(endDate.getDate() - 363); 
 
   for (let idx = 0; idx < 364; idx++) {
-    const rand = Math.abs(Math.sin(seed + idx));
+    // High-frequency pseudo-random generator
+    const x = Math.sin(seed + idx * 1.37) * 10000;
+    const rand = x - Math.floor(x);
+    
     let level = 0;
-    if (rand > 0.65) level = 1;
-    if (rand > 0.78) level = 2;
-    if (rand > 0.88) level = 3;
-    if (rand > 0.96) level = 4;
+    // Base 55% chance of blank
+    if (rand > 0.55) {
+      if (rand > 0.95) level = 4;
+      else if (rand > 0.85) level = 3;
+      else if (rand > 0.70) level = 2;
+      else level = 1;
+    }
     
     // Cluster high activity in recent weeks
     if (idx > 300 && rand > 0.4) level = Math.max(level, 2);
 
     const current = new Date(startDate);
     current.setDate(startDate.getDate() + idx);
+    
+    // Realistic GitHub drop-off on weekends
+    const day = current.getDay();
+    if ((day === 0 || day === 6) && rand < 0.8) {
+      level = 0;
+    }
     
     const count = level === 0 ? 0 : Math.floor((rand * 7) * level) + 1;
     const dateStr = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });

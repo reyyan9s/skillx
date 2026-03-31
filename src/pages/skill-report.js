@@ -1,243 +1,304 @@
 import { renderSidebar } from '../components/nav.js';
+import { AUTH } from '../utils/auth.js';
+import { STUDENTS_DATA } from '../data/students.js';
 
-const STUDENT_SKILLS = [
-  { name: 'React', level: 92 },
-  { name: 'Node.js', level: 88 },
-  { name: 'Python', level: 82 },
-  { name: 'TypeScript', level: 78 },
-  { name: 'PostgreSQL', level: 75 },
-  { name: 'Machine Learning', level: 65 },
-  { name: 'JavaScript', level: 90 },
-  { name: 'CSS', level: 85 },
-  { name: 'Git', level: 80 },
-  { name: 'REST APIs', level: 88 },
-  { name: 'Express', level: 82 },
-  { name: 'TensorFlow', level: 55 },
-  { name: 'D3.js', level: 45 },
-  { name: 'WebSocket', level: 60 },
-];
+function generateResumeHTML(d, state) {
+  const projectsHtml = d.projects.map(p => {
+    const projContribs = d.contributions.filter(c => c.project === p.name);
+    // Use the actual verified contributions dynamically
+    const bullets = projContribs.map(c => `<li style="margin-bottom: 4px;">${c.task} (Verified Impact: ${c.weight}%)</li>`).join('');
+    
+    let projectSkills = new Set();
+    projContribs.forEach(c => c.skills.forEach(s => projectSkills.add(s)));
+    const techStack = Array.from(projectSkills).join(', ');
 
-const SAMPLE_JD = `Senior Full-Stack Engineer — FinTech Startup
+    return `
+      <div style="margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <strong style="font-size: 14px; text-transform: uppercase;">${p.name}</strong>
+          <span style="font-size: 12px; font-weight: 600; color: #444;">Role: ${p.role}</span>
+        </div>
+        ${techStack ? `<div style="font-size: 12px; color: #555; margin-bottom: 6px;"><em>Tech Stack: ${techStack}</em></div>` : ''}
+        <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #333; line-height: 1.5; list-style-type: square;">
+          ${bullets}
+        </ul>
+      </div>
+    `;
+  }).join('');
 
-We're looking for a senior full-stack engineer to join our team building the next generation of digital banking infrastructure.
+  const verifiedSkills = d.skills.filter(s => s.type === 'verified').map(s => s.name).join(', ');
+  
+  const headerLinks = [];
+  if (state.email) headerLinks.push(`<span>${state.email}</span>`);
+  if (state.phone) headerLinks.push(`<span>${state.phone}</span>`);
+  if (state.github) headerLinks.push(`<span>${state.github.replace('https://', '').replace('http://', '').replace('www.', '')}</span>`);
+  if (state.linkedin) headerLinks.push(`<span>${state.linkedin.replace('https://', '').replace('http://', '').replace('www.', '')}</span>`);
 
-Requirements:
-- 3+ years experience with React and TypeScript
-- Strong backend skills in Node.js or Go
-- Experience with PostgreSQL or similar databases
-- Familiarity with REST APIs and WebSocket real-time systems
-- Knowledge of AWS or GCP cloud services
-- Experience with Docker and Kubernetes
-- Understanding of CI/CD pipelines
-- Strong understanding of security best practices
+  return `
+    <div style="max-width: 800px; margin: 0 auto; color: #111;">
+      
+      <!-- Header -->
+      <div style="text-align: ${state.avatar ? 'left' : 'center'}; display: flex; align-items: center; gap: 24px; border-bottom: 2px solid #111; padding-bottom: 16px; margin-bottom: 16px;">
+        ${state.avatar ? `<div style="width: 64px; height: 64px; border-radius: 50%; background: #111; color: #fff; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; flex-shrink: 0;">${d.initials}</div>` : ''}
+        <div style="flex: 1;">
+          <h1 style="margin: 0 0 8px 0; font-size: 26px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #000;">${state.name}</h1>
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: ${state.avatar ? 'flex-start' : 'center'}; font-size: 11px; color: #333;">
+            ${headerLinks.join('<span style="color: #999;">|</span>')}
+          </div>
+        </div>
+      </div>
 
-Nice to have:
-- Experience with Redis or caching strategies
-- Knowledge of payment processing (Stripe)
-- Familiarity with monitoring tools (Datadog)`;
+      <!-- Summary -->
+      <div style="margin-bottom: 20px;">
+        <h2 style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin: 0 0 8px 0; color: #000;">Professional Summary</h2>
+        <p style="margin: 0; font-size: 13px; color: #222; line-height: 1.6;">${d.summary}</p>
+      </div>
 
-function analyzeJD(jdText) {
-  const skillKeywords = {
-    'React': { kw: ['react', 'reactjs', 'react.js'], priority: 'critical' },
-    'TypeScript': { kw: ['typescript', 'ts'], priority: 'critical' },
-    'Node.js': { kw: ['node', 'nodejs', 'node.js'], priority: 'critical' },
-    'Go': { kw: ['go', 'golang'], priority: 'medium' },
-    'PostgreSQL': { kw: ['postgresql', 'postgres', 'sql', 'database'], priority: 'critical' },
-    'REST APIs': { kw: ['rest', 'restful', 'api design', 'rest api'], priority: 'critical' },
-    'AWS': { kw: ['aws', 'amazon web services'], priority: 'medium' },
-    'GCP': { kw: ['gcp', 'google cloud'], priority: 'low' },
-    'Docker': { kw: ['docker', 'containerization'], priority: 'medium' },
-    'Kubernetes': { kw: ['kubernetes', 'k8s'], priority: 'medium' },
-    'CI/CD': { kw: ['ci/cd', 'ci cd', 'continuous integration', 'pipeline'], priority: 'low' },
-    'Security': { kw: ['security', 'auth', 'authentication'], priority: 'critical' },
-    'WebSocket': { kw: ['websocket', 'real-time', 'realtime'], priority: 'medium' },
-    'Redis': { kw: ['redis', 'caching'], priority: 'low' },
-    'Stripe': { kw: ['stripe', 'payment'], priority: 'low' },
-    'Monitoring': { kw: ['datadog', 'grafana', 'monitoring'], priority: 'low' },
-  };
+      <!-- Projects / Experience -->
+      <div style="margin-bottom: 20px;">
+        <h2 style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin: 0 0 12px 0; color: #000;">Verified Project Contributions</h2>
+        ${projectsHtml}
+      </div>
 
-  const lowerJD = jdText.toLowerCase();
-  const required = [];
+      <!-- Skills -->
+      <div style="margin-bottom: 20px;">
+        <h2 style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin: 0 0 8px 0; color: #000;">Technical Skills</h2>
+        <div style="font-size: 13px; color: #222; line-height: 1.6;">
+          <div style="margin-bottom: 4px;"><strong>Verified Competencies:</strong> ${verifiedSkills}</div>
+          ${state.skills ? `<div><strong>Additional Technologies:</strong> ${state.skills}</div>` : ''}
+        </div>
+      </div>
 
-  for (const [skill, data] of Object.entries(skillKeywords)) {
-    if (data.kw.some(kw => lowerJD.includes(kw))) {
-      const studentSkill = STUDENT_SKILLS.find(s => s.name === skill);
-      let status = 'missing';
-      if (studentSkill) {
-        status = studentSkill.level >= 70 ? 'has' : 'partial';
-      }
-      required.push({ name: skill, status, level: studentSkill?.level || 0, priority: data.priority });
-    }
-  }
+      <!-- Education -->
+      ${(state.eduDegree || state.eduSchool) ? `
+      <div style="margin-bottom: 20px;">
+        <h2 style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin: 0 0 8px 0; color: #000;">Education</h2>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; color: #222;">
+          <strong>${state.eduDegree}</strong>
+          <span>${state.eduSchool}</span>
+        </div>
+      </div>
+      ` : ''}
 
-  const critical = required.filter(r => r.priority === 'critical');
-  const medium = required.filter(r => r.priority === 'medium');
-  const low = required.filter(r => r.priority === 'low');
-
-  const crScore = critical.length > 0 ? critical.filter(c => c.status === 'has').length / critical.length : 1;
-  const mdScore = medium.length > 0 ? medium.filter(m => m.status === 'has').length / medium.length : 1;
-  const lwScore = low.length > 0 ? low.filter(l => l.status === 'has').length / low.length : 1;
-
-  // Weight: 60% critical, 30% medium, 10% low
-  const score = Math.round((crScore * 60) + (mdScore * 30) + (lwScore * 10));
-
-  return { required, score };
+    </div>
+  `;
 }
 
 export function renderSkillReport() {
+  const user = AUTH.getUser();
+  const studentId = user && user.id ? user.id : 1;
+  const d = STUDENTS_DATA[studentId] || STUDENTS_DATA[1];
+
   return `
     <div class="dashboard-layout">
       ${renderSidebar('report')}
       <div class="dash-main page-enter">
         <div class="dash-header" style="border-bottom:1px solid var(--border-default); padding-bottom:var(--space-6); margin-bottom:var(--space-6);">
-          <div class="label" style="color:var(--accent-purple); margin-bottom:var(--space-2);"><span class="badge" style="background:var(--accent-purple-light); color:var(--accent-purple); border-color:transparent; margin-right:6px;">System</span>Recruiter-Grade Evaluation</div>
-          <h1 class="font-display">AI Verification Engine</h1>
+          <div class="label" style="color:var(--accent-purple); margin-bottom:var(--space-2);"><span class="badge" style="background:var(--accent-purple-light); color:var(--accent-purple); border-color:transparent; margin-right:6px;">Tool</span>ATS-Optimized Export</div>
+          <h1 class="font-display">Resume Builder</h1>
           <p style="color:var(--text-secondary); max-width:600px; font-size:var(--text-sm); line-height:1.6;">
-            Cross-reference your cryptographically verified passport against live job descriptions. 
-            The engine evaluates coverage certainty, prioritizing critical infrastructure requirements.
+            Generate a clean, professional, ATS-friendly resume utilizing your real, cryptographically verified contributions.
           </p>
         </div>
 
-        <div class="report-layout">
-          <!-- Input -->
-          <div class="report-input-area liquid-glass" style="padding:var(--space-6); border-radius:var(--radius-xl);">
-            <label style="font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-tertiary); display:block; margin-bottom:var(--space-3);">
-              Target Specification (Job Description)
-            </label>
-            <textarea class="input" id="jd-input" placeholder="Paste a job description here..." style="font-size:12px; line-height:1.8; min-height:400px; font-family:var(--font-mono); background:rgba(255,255,255,0.5);">${SAMPLE_JD}</textarea>
-            <button class="btn btn-primary" style="margin-top:var(--space-4); width:100%; border-radius:var(--radius-sm);" id="analyze-btn">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              Run Priority Analysis
-            </button>
-            <div style="margin-top:var(--space-6);">
-              <div class="label" style="font-size:10px; margin-bottom:var(--space-3);">Verified Index Loaded (${STUDENT_SKILLS.length} nodes)</div>
-              <div style="display:flex; flex-wrap:wrap; gap:var(--space-1);">
-                ${STUDENT_SKILLS.filter(s => s.level >= 70).map(s => `
-                  <span class="skill-tag" style="font-size:9px; font-family:var(--font-mono); opacity:0.8;">${s.name}</span>
-                `).join('')}
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: var(--space-8); align-items: start;">
+          <!-- Left Column -->
+          <div style="display: flex; flex-direction: column; gap: var(--space-6); position: sticky; top: var(--space-6);">
+            
+            <!-- Input Form -->
+            <div class="card liquid-glass" style="padding: var(--space-6);">
+              <h3 style="font-family: var(--font-heading); margin-bottom: var(--space-4);">Personal Details</h3>
+            
+            <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+              <div>
+                <label style="font-size: 10px; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 4px; display: block;">Full Name</label>
+                <input type="text" id="res-name" value="${d.name}" style="width: 100%; padding: 10px; border: 1px solid var(--border-strong); background: rgba(0,0,0,0.02); color: var(--text-primary); border-radius: var(--radius-sm); outline: none;">
+              </div>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+                <div>
+                  <label style="font-size: 10px; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 4px; display: block;">Email</label>
+                  <input type="text" id="res-email" value="${d.email || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-strong); background: rgba(0,0,0,0.02); color: var(--text-primary); border-radius: var(--radius-sm); outline: none;">
+                </div>
+                <div>
+                  <label style="font-size: 10px; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 4px; display: block;">Phone (Optional)</label>
+                  <input type="text" id="res-phone" value="+1 (555) 019-2026" style="width: 100%; padding: 10px; border: 1px solid var(--border-strong); background: rgba(0,0,0,0.02); color: var(--text-primary); border-radius: var(--radius-sm); outline: none;">
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+                <div>
+                  <label style="font-size: 10px; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 4px; display: block;">GitHub URL</label>
+                  <input type="text" id="res-github" value="${d.github || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-strong); background: rgba(0,0,0,0.02); color: var(--text-primary); border-radius: var(--radius-sm); outline: none;">
+                </div>
+                <div>
+                  <label style="font-size: 10px; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 4px; display: block;">LinkedIn URL</label>
+                  <input type="text" id="res-linkedin" value="${d.linkedin || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-strong); background: rgba(0,0,0,0.02); color: var(--text-primary); border-radius: var(--radius-sm); outline: none;">
+                </div>
+              </div>
+
+              <div style="margin-top: var(--space-2);">
+                <label style="font-size: 10px; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 4px; display: block;">Education</label>
+                <input type="text" id="res-edu-degree" value="B.S. in Computer Science" placeholder="Degree" style="width: 100%; padding: 10px; border: 1px solid var(--border-strong); background: rgba(0,0,0,0.02); color: var(--text-primary); border-radius: var(--radius-sm); margin-bottom: 8px; outline: none;">
+                <input type="text" id="res-edu-school" value="University of Technology · Expected 2026" placeholder="School & Year" style="width: 100%; padding: 10px; border: 1px solid var(--border-strong); background: rgba(0,0,0,0.02); color: var(--text-primary); border-radius: var(--radius-sm); outline: none;">
+              </div>
+
+              <div>
+                <label style="font-size: 10px; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 4px; display: block;">Additional Skills (Comma separated)</label>
+                <input type="text" id="res-skills" value="Agile, Technical Writing" style="width: 100%; padding: 10px; border: 1px solid var(--border-strong); background: rgba(0,0,0,0.02); color: var(--text-primary); border-radius: var(--radius-sm); outline: none;">
+              </div>
+
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-top: var(--space-2); border-top: 1px solid var(--border-subtle); padding-top: var(--space-4);">
+                <span style="font-size: 12px; color: var(--text-secondary);">Include Avatar (Not recommended for ATS)</span>
+                <input type="checkbox" id="res-avatar" style="accent-color: var(--accent-purple); width: 16px; height: 16px;">
+              </div>
+
+              <button class="btn btn-primary" id="btn-print-resume" style="width: 100%; margin-top: var(--space-4); justify-content: center; transition: none !important; transform: none !important; box-shadow: none !important;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download PDF
+              </button>
+            </div>
+            </div> <!-- End of .card liquid-glass -->
+
+            <!-- ATS Score Analyzer -->
+            <div class="card liquid-glass" style="padding: var(--space-5);">
+              <h3 style="font-family: var(--font-heading); margin-bottom: var(--space-4); display: flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                ATS Analyzer
+              </h3>
+              
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3);">
+                <div style="font-size: 10px; text-transform: uppercase; color: var(--text-tertiary); font-family: var(--font-mono);">Match Score</div>
+                <div id="ats-score-display" style="font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--accent-green);">100<span style="font-size:14px; color:var(--text-tertiary);">/100</span></div>
+              </div>
+
+              <div style="margin-bottom: var(--space-4);">
+                <div style="height: 6px; background: rgba(0,0,0,0.05); border-radius: 4px; overflow: hidden;">
+                  <div id="ats-progress-fill" style="height: 100%; width: 100%; background: var(--accent-green); transition: width 0.3s, background 0.3s;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size: 10px; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 8px; font-family: var(--font-mono);">Actionable Tips</div>
+                <ul id="ats-tips-list" style="margin: 0; padding-left: 16px; font-size: 12px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 6px; line-height: 1.5;">
+                  <!-- Dynamically populated -->
+                </ul>
               </div>
             </div>
+
           </div>
 
-          <!-- Output -->
-          <div id="report-output">
-            <div style="height:100%; min-height:500px; background:var(--bg-inset); border-radius:var(--radius-lg); border:1px dashed var(--border-default); display:flex; align-items:center; justify-content:center; flex-direction:column; color:var(--text-tertiary);">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:var(--space-4); opacity:0.5;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              <div style="font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:0.1em;">Waiting for syntax block...</div>
+          <!-- Right: Live Preview -->
+          <div style="background: #ffffff; padding: 48px; border: 1px solid var(--border-default); min-height: 800px; font-family: 'Inter', system-ui, sans-serif; position: relative;" id="resume-preview-container">
+            <div id="resume-preview">
+              <!-- Dynamically populated -->
             </div>
           </div>
         </div>
       </div>
     </div>
-  `;
-}
-
-function getPriorityColor(p) {
-  if (p === 'critical') return 'var(--accent-red)';
-  if (p === 'medium') return 'var(--accent-orange)';
-  return 'var(--accent-blue)';
-}
-
-function renderAnalysisResult(analysis) {
-  const { required, score } = analysis;
-  const scoreColor = score >= 80 ? 'var(--accent-green)' : score >= 60 ? 'var(--accent-orange)' : 'var(--accent-red)';
-  
-  const critical = required.filter(r => r.priority === 'critical');
-  const medium = required.filter(r => r.priority === 'medium');
-  const low = required.filter(r => r.priority === 'low');
-  
-  const missingCritical = critical.filter(r => r.status !== 'has');
-  const missingMedium = medium.filter(r => r.status !== 'has');
-  const missingLow = low.filter(r => r.status !== 'has');
-
-  return `
-    <div class="report-output page-enter">
-      <!-- Intelligence Graphic -->
-      <div style="background:var(--bg-dark); color:white; padding:var(--space-8); border-radius:var(--radius-xl); display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-6);">
-        <div>
-          <div style="font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:rgba(255,255,255,0.5); margin-bottom:var(--space-2);">System Decision Output</div>
-          <h2 class="font-heading" style="font-size:32px; margin:0;">${score >= 80 ? 'Strong Candidate' : score >= 65 ? 'Viable, with gaps' : 'High-risk mismatch'}</h2>
-          <div style="font-family:var(--font-mono); font-size:12px; margin-top:var(--space-3); color:rgba(255,255,255,0.7);">
-            Coverage: ${critical.filter(c => c.status === 'has').length}/${critical.length} Critical
-          </div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:var(--text-6xl); font-family:var(--font-display); font-weight:700; color:${scoreColor}; line-height:1;">${score}<span style="font-size:24px;">%</span></div>
-          <div class="label" style="color:rgba(255,255,255,0.5); margin-top:4px;">Verified Fit Score</div>
-        </div>
-      </div>
-
-      <!-- Actionable Recs -->
-      <div class="card liquid-glass" style="margin-bottom:var(--space-6); background:rgba(255,255,255,0.6);">
-        <div class="label" style="margin-bottom:var(--space-4); color:var(--accent-purple);">Algorithmic Directives (Actionable Intelligence)</div>
-        <ul style="font-size:var(--text-sm); line-height:1.7; padding-left:var(--space-4); margin:0;">
-          ${missingCritical.length > 0 ? missingCritical.map(m => `<li style="margin-bottom:8px;"><strong>High Priority Execution:</strong> Build and document a feature using <strong style="color:var(--accent-red);">${m.name}</strong> to close a critical gap in your passport.</li>`).join('') : '<li style="margin-bottom:8px;">No critical gaps. Proceed to submission.</li>'}
-          ${missingMedium.length > 0 ? `<li style="margin-bottom:8px;"><strong>Secondary Target:</strong> Integrating ${missingMedium.map(m=>`<strong>${m.name}</strong>`).join(', ')} into your next commit will increase match confidence by 15%.</li>` : ''}
-          ${missingLow.length > 0 ? `<li><strong>Optimization:</strong> ${missingLow.map(m=>`<strong>${m.name}</strong>`).join(', ')} are nice-to-haves but not blocking for application.</li>` : ''}
-        </ul>
-      </div>
-
-      <!-- Detail Grid -->
-      <div>
-        <div class="label" style="margin-bottom:var(--space-3);">Priority Gap Analysis Matrix</div>
-        
-        <table style="width:100%; text-align:left; border-collapse:collapse; font-size:var(--text-sm); background:var(--bg-surface); border-radius:var(--radius-lg); overflow:hidden; box-shadow:0 0 0 1px var(--border-default);">
-          <thead>
-            <tr style="background:var(--bg-elevated); border-bottom:1px solid var(--border-default); font-family:var(--font-mono); font-size:10px; text-transform:uppercase;">
-              <th style="padding:var(--space-3) var(--space-4);">Infrastructure Requirement</th>
-              <th style="padding:var(--space-3) var(--space-4);">Priority Block</th>
-              <th style="padding:var(--space-3) var(--space-4); text-align:right;">Verification Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${[...critical, ...medium, ...low].map(r => `
-              <tr style="border-bottom:1px solid var(--border-subtle);">
-                <td style="padding:var(--space-3) var(--space-4); font-weight:500;">${r.name}</td>
-                <td style="padding:var(--space-3) var(--space-4);">
-                  <span style="font-size:9px; font-family:var(--font-mono); text-transform:uppercase; padding:2px 6px; border-radius:2px; background:${getPriorityColor(r.priority)}20; color:${getPriorityColor(r.priority)};">${r.priority}</span>
-                </td>
-                <td style="padding:var(--space-3) var(--space-4); text-align:right;">
-                  ${r.status === 'has' 
-                    ? `<span style="color:var(--accent-green); font-family:var(--font-mono); font-size:11px; font-weight:600;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px; margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>VERIFIED</span>` 
-                    : `<span style="color:var(--text-tertiary); font-family:var(--font-mono); font-size:11px;">[ GAP DETECTED ]</span>`}
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    
+    <style>
+      @media print {
+        body * { visibility: hidden; }
+        #resume-preview, #resume-preview * { visibility: visible; }
+        #resume-preview {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          margin: 0;
+          padding: 24px;
+          border: none !important;
+          box-shadow: none !important;
+        }
+      }
+    </style>
   `;
 }
 
 export function initSkillReportInteractions() {
-  const analyzeBtn = document.getElementById('analyze-btn');
-  const jdInput = document.getElementById('jd-input');
-  const outputDiv = document.getElementById('report-output');
+  const user = AUTH.getUser();
+  const studentId = user && user.id ? user.id : 1;
+  const d = STUDENTS_DATA[studentId] || STUDENTS_DATA[1];
 
-  if (analyzeBtn && jdInput && outputDiv) {
-    if (jdInput.value.trim()) {
-      setTimeout(() => {
-        const analysis = analyzeJD(jdInput.value);
-        outputDiv.innerHTML = renderAnalysisResult(analysis);
-      }, 300);
+  const preview = document.getElementById('resume-preview');
+  
+  const getValues = () => ({
+    name: document.getElementById('res-name')?.value || '',
+    email: document.getElementById('res-email')?.value || '',
+    phone: document.getElementById('res-phone')?.value || '',
+    github: document.getElementById('res-github')?.value || '',
+    linkedin: document.getElementById('res-linkedin')?.value || '',
+    eduDegree: document.getElementById('res-edu-degree')?.value || '',
+    eduSchool: document.getElementById('res-edu-school')?.value || '',
+    skills: document.getElementById('res-skills')?.value || '',
+    avatar: document.getElementById('res-avatar')?.checked || false
+  });
+
+  const updateATS = (state) => {
+    let score = 100;
+    let tips = [];
+
+    if (!state.email || !state.email.includes('@')) { score -= 10; tips.push("Add a valid email address."); }
+    if (!state.phone || state.phone.length < 5) { score -= 5; tips.push("Add a phone number so recruiters can easily contact you."); }
+    if (!state.linkedin) { score -= 10; tips.push("Provide a LinkedIn URL. ATS parsers cross-reference social profiles."); }
+    if (!state.github) { score -= 5; tips.push("Include a GitHub URL to validate technical credibility."); }
+    
+    if (!state.eduDegree || !state.eduSchool) { score -= 15; tips.push("Ensure your Education field is fully populated."); }
+
+    if (state.avatar) { score -= 25; tips.push("<strong style='color:var(--accent-red);'>Remove the Avatar!</strong> Images confuse ATS parsers and often result in auto-rejections."); }
+
+    if (!state.skills || state.skills.split(',').length < 3) { score -= 10; tips.push("Add at least 3 relevant additional skills separated by commas."); }
+
+    if (tips.length === 0) {
+      tips.push("<span style='color:var(--accent-green);'>Your resume formatting is perfectly optimized for standard ATS parsers!</span>");
     }
 
-    analyzeBtn.addEventListener('click', () => {
-      const text = jdInput.value.trim();
-      if (!text) return;
+    score = Math.max(0, score);
+    
+    const scoreDisplay = document.getElementById('ats-score-display');
+    const progressFill = document.getElementById('ats-progress-fill');
+    const tipsList = document.getElementById('ats-tips-list');
 
-      analyzeBtn.innerHTML = `<span style="display:inline-flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:10px;"><span class="spinner"></span> COMPILING INTELLIGENCE...</span>`;
-      analyzeBtn.disabled = true;
-      outputDiv.innerHTML = `<div style="height:100%; min-height:500px; display:flex; align-items:center; justify-content:center; flex-direction:column; color:var(--accent-purple);"><span class="spinner" style="border-color:var(--accent-purple); border-right-color:transparent; width:32px; height:32px; border-width:3px;"></span><div style="font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:0.1em; margin-top:var(--space-4);">Running verification logic...</div></div>`;
+    if (scoreDisplay) scoreDisplay.innerHTML = `${score}<span style="font-size:14px; color:var(--text-tertiary);">/100</span>`;
+    
+    if (progressFill) {
+      progressFill.style.width = `${score}%`;
+      progressFill.style.background = score >= 80 ? 'var(--accent-green)' : score >= 60 ? 'var(--accent-orange)' : 'var(--accent-red)';
+    }
 
-      setTimeout(() => {
-        const analysis = analyzeJD(text);
-        outputDiv.innerHTML = renderAnalysisResult(analysis);
+    if (scoreDisplay) {
+       scoreDisplay.style.color = score >= 80 ? 'var(--accent-green)' : score >= 60 ? 'var(--accent-orange)' : 'var(--accent-red)';
+    }
 
-        analyzeBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Run Priority Analysis`;
-        analyzeBtn.disabled = false;
-      }, 1200);
+    if (tipsList) {
+      tipsList.innerHTML = tips.map(t => `<li style="margin-bottom: 2px;">${t}</li>`).join('');
+    }
+  };
+
+  const render = () => {
+    if (preview) {
+      const state = getValues();
+      preview.innerHTML = generateResumeHTML(d, state);
+      updateATS(state);
+    }
+  };
+
+  // Initial render
+  setTimeout(render, 50);
+
+  // Attach event listeners to all inputs to re-render in real-time
+  const inputs = document.querySelectorAll('input');
+  inputs.forEach(input => {
+    input.addEventListener('input', render);
+    input.addEventListener('change', render);
+  });
+
+  const printBtn = document.getElementById('btn-print-resume');
+  if(printBtn) {
+    printBtn.addEventListener('click', () => {
+      window.print();
     });
   }
 }

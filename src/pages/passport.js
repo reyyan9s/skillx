@@ -299,6 +299,18 @@ export function renderPassport(slug) {
                 ${d.name} <span style="color: var(--text-tertiary); font-weight: 400;">(${d.tagline})</span>
               </div>
               
+              <div style="color: var(--text-tertiary);">EXTERNAL PROFILES:</div>
+              <div style="display:flex; gap:var(--space-4); align-items:center; font-family:var(--font-mono); font-size:11px;">
+                <a href="${d.github || '#'}" target="_blank" rel="noopener noreferrer" style="color:var(--text-primary); text-decoration:none; transition: color 0.1s;" onmouseover="this.style.color='var(--accent-purple)'" onmouseout="this.style.color='var(--text-primary)'">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px; vertical-align:-1px;"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                  github.com/${(d.github || '').split('/').pop()}
+                </a>
+                <a href="${d.linkedin || '#'}" target="_blank" rel="noopener noreferrer" style="color:var(--text-primary); text-decoration:none; transition: color 0.1s;" onmouseover="this.style.color='var(--accent-purple)'" onmouseout="this.style.color='var(--text-primary)'">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px; vertical-align:-1px;"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                  linkedin.com/in/${(d.linkedin || '').split('/').pop()}
+                </a>
+              </div>
+              
               <div style="color: var(--text-tertiary);">RECORD HASH:</div>
               <div style="color: var(--text-primary); word-break: break-all;">${d.hash}</div>
               
