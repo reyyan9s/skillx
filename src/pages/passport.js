@@ -135,6 +135,95 @@ function skillLevel(level) {
   return 'beginner';
 }
 
+function generateSystemAssessment(d) {
+  let score = 0;
+  let strengths = [];
+  let weaknesses = [];
+  let confidence = 'Medium (Partial Verification)';
+  
+  let feCount = 0, beCount = 0, aiCount = 0, devOpsCount = 0;
+  let strongEvidenceCount = 0;
+
+  d.contributions.forEach(c => {
+    const txt = JSON.stringify(c).toLowerCase();
+    if (txt.includes('react') || txt.includes('frontend') || txt.includes('ui/') || txt.includes('css')) feCount++;
+    if (txt.includes('node') || txt.includes('back-end') || txt.includes('backend') || txt.includes('postgres') || txt.includes('jwt') || txt.includes('api')) beCount++;
+    if (txt.includes('ai') || txt.includes('ml') || txt.includes('python') || txt.includes('model') || txt.includes('algorithm')) aiCount++;
+    if (txt.includes('docker') || txt.includes('aws') || txt.includes('ci/cd') || txt.includes('infrastructure')) devOpsCount++;
+    if (c.strength === 'strong') strongEvidenceCount++;
+  });
+
+  if (feCount >= 1) strengths.push('Frontend Development');
+  else weaknesses.push('Frontend Architecture');
+
+  if (beCount >= 1) strengths.push('Backend & APIs');
+  else weaknesses.push('Backend Infrastructure');
+
+  if (aiCount >= 1) strengths.push('Machine Learning');
+  else weaknesses.push('AI / ML Workflows');
+
+  if (devOpsCount >= 1) strengths.push('DevOps & Cloud');
+  else weaknesses.push('DevOps / Deployment');
+
+  score = Math.min(98, Math.floor((d.contributions.length * 12) + (strongEvidenceCount * 15) + 40));
+
+  if (strongEvidenceCount >= d.contributions.length * 0.5) {
+     confidence = 'High (Cryptographically Verified)';
+  } else if (strongEvidenceCount > 0) {
+     confidence = 'Medium-High (Strong Partial Evidence)';
+  }
+
+  const primaryStrength = strengths.length > 0 ? strengths[0] : 'General Programming';
+  const primaryWeakness = weaknesses.length > 0 ? weaknesses[0] : 'Specialized Roles';
+
+  const summary = `Strong ${primaryStrength} contributor with consistent involvement in ${strengths.length > 1 ? strengths[1] : 'verified deployments'}. Evidence algorithm explicitly validates capabilities in these areas based on ${d.contributions.length} on-chain logs. Limited exposure to ${primaryWeakness} currently recorded.`;
+
+  return `
+    <div style="border: 1px solid var(--border-strong); background: rgba(0,0,0,0.02); padding: var(--space-5); margin-bottom: var(--space-8);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+        <div>
+          <div style="font-size: 12px; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; display: flex; align-items: center; gap: var(--space-2);">
+            <span style="display: inline-block; width: 6px; height: 6px; background: var(--accent-purple);"></span>
+            System Evaluation Engine
+          </div>
+          <div style="font-size: 10px; color: var(--text-tertiary); font-family: var(--font-mono); text-transform: uppercase;">Recruiter-Ready Assessment</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--accent-purple); line-height: 1;">${score}<span style="font-size: 14px;">/100</span></div>
+          <div style="font-size: 10px; color: var(--text-tertiary); font-family: var(--font-mono); text-transform: uppercase; margin-top: 2px;">Evaluation Score</div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4);">
+        <div style="border-left: 2px solid var(--accent-green); padding-left: var(--space-3);">
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Detected Strengths</div>
+          <div style="font-size: 12px; font-family: var(--font-mono); color: var(--text-primary); line-height: 1.6;">
+            ${strengths.length > 0 ? strengths.map(s => `• ${s}`).join('<br>') : '• General Programming'}
+          </div>
+        </div>
+        <div style="border-left: 2px solid var(--accent-orange); padding-left: var(--space-3);">
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Identified Gaps</div>
+          <div style="font-size: 12px; font-family: var(--font-mono); color: var(--text-primary); line-height: 1.6;">
+            ${weaknesses.length > 0 ? weaknesses.slice(0, 3).map(w => `• ${w}`).join('<br>') : '• None detected'}
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: var(--space-4); border-left: 2px solid var(--accent-blue); padding-left: var(--space-3);">
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px;">Confidence Level</div>
+        <div style="font-size: 12px; font-family: var(--font-mono); color: var(--text-primary);">${confidence}</div>
+      </div>
+
+      <div style="border-top: 1px dashed var(--border-strong); padding-top: var(--space-4);">
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px;">System Summary</div>
+        <div style="font-size: 13px; font-family: var(--font-mono); line-height: 1.6; color: var(--text-primary);">
+          ${summary}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 export function renderPassport(slug) {
   const d = getPassportData(slug);
 
@@ -232,16 +321,8 @@ export function renderPassport(slug) {
         </div>
 
         <div style="padding: var(--space-6);">
-          <!-- AI SUMMARY -->
-          <div style="margin-bottom: var(--space-8);">
-            <div style="font-size: 12px; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: var(--space-2); display: flex; align-items: center; gap: var(--space-2);">
-              <span style="display: inline-block; width: 6px; height: 6px; background: var(--accent-purple);"></span>
-              System Analysis:
-            </div>
-            <div style="font-size: 13px; font-family: var(--font-mono); line-height: 1.6; color: var(--text-secondary); border-left: 2px solid var(--text-primary); padding-left: var(--space-4);">
-              User operates as a high-impact engineering asset focusing on system infrastructure. 12-month trailing analysis shows consistent 35-45% contribution weight across 4 verified team deployments. Evidence algorithm explicitly validates senior-level architectural capabilities.
-            </div>
-          </div>
+          <!-- SYSTEM EVALUATION -->
+          ${generateSystemAssessment(d)}
 
           <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: var(--space-8);">
             

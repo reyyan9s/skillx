@@ -260,6 +260,76 @@ export function renderDashboard(activeTab = 'overview') {
           </div>
         </div>
       </div>
+
+      <!-- Curated Opportunities -->
+      <div style="margin-top:var(--space-8);">
+        <h3 style="font-family:var(--font-heading); margin-bottom:var(--space-2);">Curated Opportunities</h3>
+        <p style="color:var(--text-secondary); margin-bottom:var(--space-4); font-size:var(--text-sm);">Connect your verified skills to real-world roles.</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-4);" class="stagger-in">
+          
+          <!-- Card 1: Web Developer -->
+          <div class="card liquid-glass" style="display: flex; flex-direction: column; padding: var(--space-5);">
+            <div style="font-size: 16px; font-weight: 600; font-family: var(--font-heading); margin-bottom: var(--space-1);">Web Developer</div>
+            <div style="font-size: 12px; color: var(--text-tertiary); margin-bottom: var(--space-3); line-height: 1.4;">Build and optimize responsive frontend interfaces.</div>
+            <div style="display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-5);">
+              <span class="skill-tag" style="font-size: 10px; padding: 2px 6px;">React</span>
+              <span class="skill-tag" style="font-size: 10px; padding: 2px 6px;">JavaScript</span>
+              <span class="skill-tag" style="font-size: 10px; padding: 2px 6px;">CSS</span>
+            </div>
+            <a href="https://internshala.com/jobs/web-development-jobs/work-from-home" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="margin-top: auto; text-align: center; justify-content: center; width: 100%;">
+              View Opportunities
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+          </div>
+
+          <!-- Card 2: AI Engineer -->
+          <div class="card liquid-glass" style="display: flex; flex-direction: column; padding: var(--space-5);">
+            <div style="font-size: 16px; font-weight: 600; font-family: var(--font-heading); margin-bottom: var(--space-1);">AI Engineer</div>
+            <div style="font-size: 12px; color: var(--text-tertiary); margin-bottom: var(--space-3); line-height: 1.4;">Develop and deploy machine learning models.</div>
+            <div style="display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-5);">
+              <span class="skill-tag" style="font-size: 10px; padding: 2px 6px;">Python</span>
+              <span class="skill-tag" style="font-size: 10px; padding: 2px 6px;">PyTorch</span>
+              <span class="skill-tag" style="font-size: 10px; padding: 2px 6px;">ML</span>
+            </div>
+            <a href="https://internshala.com/jobs/artificial-intelligence-ai-jobs/work-from-home/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="margin-top: auto; text-align: center; justify-content: center; width: 100%;">
+              View Opportunities
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+          </div>
+
+          <!-- Card 3: Backend Developer -->
+          <div class="card liquid-glass" style="display: flex; flex-direction: column; padding: var(--space-5);">
+            <div style="font-size: 16px; font-weight: 600; font-family: var(--font-heading); margin-bottom: var(--space-1);">Backend Developer</div>
+            <div style="font-size: 12px; color: var(--text-tertiary); margin-bottom: var(--space-3); line-height: 1.4;">Architect scalable APIs and server-side logic.</div>
+            <div style="display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-5);">
+              <span class="skill-tag" style="font-size: 10px; padding: 2px 6px;">Node.js</span>
+              <span class="skill-tag" style="font-size: 10px; padding: 2px 6px;">PostgreSQL</span>
+              <span class="skill-tag" style="font-size: 10px; padding: 2px 6px;">AWS</span>
+            </div>
+            <a href="https://internshala.com/jobs/backend-development-jobs/work-from-home" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="margin-top: auto; text-align: center; justify-content: center; width: 100%;">
+              View Opportunities
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+          </div>
+
+          <!-- Card 4: Data Analyst -->
+          <div class="card liquid-glass" style="display: flex; flex-direction: column; padding: var(--space-5);">
+            <div style="font-size: 16px; font-weight: 600; font-family: var(--font-heading); margin-bottom: var(--space-1);">Data Analyst</div>
+            <div style="font-size: 12px; color: var(--text-tertiary); margin-bottom: var(--space-3); line-height: 1.4;">Extract insights from complex data sets.</div>
+            <div style="display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-5);">
+              <span class="skill-tag" style="font-size: 10px; padding: 2px 6px;">SQL</span>
+              <span class="skill-tag" style="font-size: 10px; padding: 2px 6px;">Python</span>
+              <span class="skill-tag" style="font-size: 10px; padding: 2px 6px;">Pandas</span>
+            </div>
+            <a href="https://internshala.com/jobs/data-science-jobs/work-from-home" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="margin-top: auto; text-align: center; justify-content: center; width: 100%;">
+              View Opportunities
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+          </div>
+
+        </div>
+      </div>
     `;
   }
 
