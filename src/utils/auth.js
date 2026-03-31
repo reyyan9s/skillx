@@ -17,6 +17,7 @@ export const AUTH = {
     localStorage.removeItem('skillx_role');
     localStorage.removeItem('skillx_user');
     window.location.hash = '/';
+    setTimeout(() => { window.location.reload(); }, 50);
   },
   isAuthenticated() {
     return !!this.getRole();

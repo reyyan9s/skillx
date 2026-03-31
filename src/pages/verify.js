@@ -1,17 +1,19 @@
 import { renderFooter } from '../components/footer.js';
+import { STUDENTS_DATA } from '../data/students.js';
 
-const VALID_HASHES = {
-  'SKX-2026-PROJECT-SKILLX-a7f3c2e8': {
-    student: 'Reyyan Sayyed',
-    contributions: 12,
-    projects: 4,
+const VALID_HASHES = {};
+Object.values(STUDENTS_DATA).forEach(s => {
+  VALID_HASHES[s.hash] = {
+    student: s.name,
+    contributions: s.verifiedContributions,
+    projects: s.activeProjects,
     generated: '2026-03-30T08:00:00Z',
-    verificationScore: 92,
-    topSkills: ['React', 'Node.js', 'Python', 'TypeScript'],
-    passportSlug: 'reyyan-sayyed',
-    originalHash: 'a7f3c2e811acba67b8d4f0d2c67b9318b7c3d2f190e8a716c5b4e3d2f1a0b8c7',
-  },
-};
+    verificationScore: s.globalScore,
+    topSkills: s.derivedSkills.slice(0, 4),
+    passportSlug: s.name.toLowerCase().replace(/\s+/g, '-'),
+    originalHash: s.hash.split('-').pop() + '11acba67b8d4f0d2c67b9318b7c3d2f190e8a716c5b4e3d2f1a0b8c7'
+  };
+});
 
 export function renderVerify(hash) {
   const data = VALID_HASHES[hash];
@@ -19,7 +21,7 @@ export function renderVerify(hash) {
 
   if (!isValid) {
     return `
-      <div class="verify-page" style="background:transparent; min-height:80vh; display:flex; align-items:center; justify-content:center; padding: var(--space-8);">
+      <div class="verify-page" style="background:transparent; min-height:80vh; display:flex; align-items:center; justify-content:center; padding: var(--space-32) var(--space-8) var(--space-8);">
         <div class="verify-card page-enter" style="border:1px solid var(--accent-red); background:rgba(17,0,0,0.8); backdrop-filter:blur(24px); color:white; padding:var(--space-10); border-radius:var(--radius-xl); text-align:center; max-width:440px;">
           <div class="verify-status-icon invalid" style="border: 2px solid var(--accent-red); color:var(--accent-red); width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto var(--space-6);">
             <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
@@ -39,7 +41,7 @@ export function renderVerify(hash) {
   }
 
   return `
-    <div class="verify-page" style="background:transparent; padding:var(--space-16) var(--space-6); min-height:80vh;">
+    <div class="verify-page" style="background:transparent; padding:var(--space-32) var(--space-6) var(--space-16); min-height:80vh;">
       <div class="container" style="max-width:640px;">
         
         <div class="page-enter">

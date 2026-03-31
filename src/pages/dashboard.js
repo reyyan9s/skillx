@@ -1,14 +1,16 @@
 import { renderSidebar } from '../components/nav.js';
+import { AUTH } from '../utils/auth.js';
+import { STUDENTS_DATA } from '../data/students.js';
 
 // ── Heatmap: 364 days of chronological contribution data ──
-function generateHeatmapData() {
+function generateHeatmapData(seed) {
   const cells = [];
   const endDate = new Date('2026-03-30T12:00:00Z');
   const startDate = new Date(endDate);
   startDate.setDate(endDate.getDate() - 363); 
 
   for (let idx = 0; idx < 364; idx++) {
-    const rand = Math.random();
+    const rand = Math.abs(Math.sin(seed + idx));
     let level = 0;
     if (rand > 0.65) level = 1;
     if (rand > 0.78) level = 2;
@@ -21,7 +23,7 @@ function generateHeatmapData() {
     const current = new Date(startDate);
     current.setDate(startDate.getDate() + idx);
     
-    const count = level === 0 ? 0 : Math.floor(Math.random() * 7 * level) + 1;
+    const count = level === 0 ? 0 : Math.floor((rand * 7) * level) + 1;
     const dateStr = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
     cells.push({ date: dateStr, level, count });
@@ -29,17 +31,7 @@ function generateHeatmapData() {
   return cells;
 }
 
-const HEATMAP = generateHeatmapData();
 const MONTHS = ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
-
-const PROJECTS = [
-  { name: 'SkillX Platform', icon: '🔐', iconBg: '#DCFCE7', team: 4, tasks: 18, contrib: 38, lastActivity: '2h ago', href: '#/project/skillx-platform', role: 'Lead', breakdown: { fe: 28, be: 52, ai: 20 } },
-  { name: 'WasteWise', icon: '♻️', iconBg: '#E0F2FE', team: 5, tasks: 14, contrib: 28, lastActivity: '1d ago', href: '#/project/wastewise', role: 'Contributor', breakdown: { fe: 35, be: 30, ai: 35 } },
-  { name: 'Posturely', icon: '🧘', iconBg: '#F5F3FF', team: 3, tasks: 11, contrib: 45, lastActivity: '3d ago', href: '#/project/posturely', role: 'Lead', breakdown: { fe: 20, be: 25, ai: 55 } },
-  { name: 'EduTrack Analytics', icon: '📊', iconBg: '#FEF3C7', team: 6, tasks: 22, contrib: 19, lastActivity: '1w ago', href: '#/project/edutrack', role: 'Support', breakdown: { fe: 60, be: 30, ai: 10 } },
-];
-
-const DERIVED_SKILLS = ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'Python', 'TensorFlow', 'REST APIs', 'System Design', 'Express', 'D3.js'];
 
 const ACTIVITY_LOG = [
   { text: 'Completed <strong>Authentication system</strong> · SkillX Platform', time: '2h ago', type: 'verified', color: 'var(--accent-green)' },
@@ -50,7 +42,7 @@ const ACTIVITY_LOG = [
   { text: 'Team endorsed <strong>Database schema design</strong>', time: '5d ago', type: 'endorsed', color: 'var(--accent-green)' },
 ];
 
-function renderHeatmap() {
+function renderHeatmap(studentId) {
   const colors = [
     'var(--bg-inset)',
     'rgba(22,163,74,0.25)',
@@ -58,6 +50,8 @@ function renderHeatmap() {
     'rgba(22,163,74,0.70)',
     'var(--accent-green)',
   ];
+
+  const HEATMAP = generateHeatmapData(studentId * 100);
 
   let blocks = '';
   HEATMAP.forEach(cell => {
@@ -84,6 +78,10 @@ function renderHeatmap() {
 
 export function renderDashboard(activeTab = 'overview') {
   let mainContent = '';
+  
+  const user = AUTH.getUser();
+  const studentId = user && user.id ? user.id : 1;
+  const student = STUDENTS_DATA[studentId] || STUDENTS_DATA[1];
 
   if (activeTab === 'settings') {
     mainContent = `
@@ -93,8 +91,27 @@ export function renderDashboard(activeTab = 'overview') {
       </div>
       <div class="card liquid-glass" style="text-align: center; padding: var(--space-12);">
         <div class="font-heading" style="font-size: var(--text-2xl); margin-bottom: var(--space-4);">GitHub Integration</div>
-        <p style="color: var(--text-tertiary);">Your repository contributions are synchronized automatically.</p>
-        <button class="btn btn-secondary" style="margin-top: var(--space-6);">Force Re-Sync</button>
+        <p style="color: var(--text-tertiary); margin-bottom: var(--space-6);">Enter your GitHub username to link your repositories and fetch your digital footprint.</p>
+        
+        <div style="display:flex; justify-content:center; gap:var(--space-2); max-width: 400px; margin: 0 auto var(--space-6);">
+            <input type="text" id="github-username-input" placeholder="GitHub Username..." style="flex:1; padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-strong); background: transparent; color: var(--text-primary); outline: none;" />
+            <button class="btn btn-primary" id="btn-sync-github">Sync GitHub</button>
+        </div>
+
+        <div id="github-result-container" style="display:none; text-align: left; background: var(--bg-surface); padding: var(--space-6); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); max-width: 400px; margin: 0 auto;">
+           <div style="display: flex; gap: var(--space-4); align-items: center;">
+              <img id="github-avatar" src="" style="width: 56px; height: 56px; border-radius: 50%;" />
+              <div>
+                  <div id="github-name" class="font-heading" style="font-size: var(--text-lg);"></div>
+                  <div id="github-login" style="font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary);"></div>
+              </div>
+           </div>
+           <div id="github-bio" style="font-size: 13px; color: var(--text-secondary); margin-top: var(--space-4);"></div>
+           <div style="display: flex; gap: var(--space-4); margin-top: var(--space-4); font-size: 12px; color: var(--text-primary); font-family: var(--font-mono);">
+              <div><span style="font-weight:700; color:var(--accent-green);" id="github-repos"></span> Repos</div>
+              <div><span style="font-weight:700; color:var(--accent-green);" id="github-followers"></span> Followers</div>
+           </div>
+        </div>
       </div>
     `;
   } else {
@@ -104,17 +121,16 @@ export function renderDashboard(activeTab = 'overview') {
         <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:var(--space-4);">
           <div>
             <div class="label" style="margin-bottom:var(--space-2);">Contribution Identity</div>
-            <h1 style="font-family:var(--font-heading); font-size:clamp(1.5rem,3vw,2.2rem); letter-spacing:-0.02em; margin-bottom:var(--space-2);">Backend-heavy systems contributor</h1>
+            <h1 style="font-family:var(--font-heading); font-size:clamp(1.5rem,3vw,2.2rem); letter-spacing:-0.02em; margin-bottom:var(--space-2);">${student.identity}</h1>
             <p style="color:var(--text-secondary); max-width:520px; line-height:1.6; font-size:var(--text-sm);">
-              You consistently own backend architecture, authentication flows, and data systems.
-              Highest verified impact: 42% contribution weight on a production engine.
+              ${student.identitySub}
             </p>
           </div>
-          <a href="#/passport/reyyan-sayyed" class="passport-preview-chip" id="dash-passport-link">
+          <a href="#/passport/${student.name.toLowerCase().replace(/\s+/g, '-')}" class="passport-preview-chip" id="dash-passport-link">
             <div class="pp-status"></div>
             <div>
               <div style="font-weight:600; font-size:var(--text-xs);">Active Passport</div>
-              <div style="font-size:10px; color:var(--text-tertiary); font-family:var(--font-mono);">SKX-2026-03-30-a7f3c2e8</div>
+              <div style="font-size:10px; color:var(--text-tertiary); font-family:var(--font-mono);">${student.hash.substring(0, 24)}...</div>
             </div>
             <span class="badge badge-verified" style="flex-shrink:0;">Verified</span>
           </a>
@@ -124,7 +140,7 @@ export function renderDashboard(activeTab = 'overview') {
       <!-- Skill tags derived from tasks -->
       <div style="display:flex; flex-wrap:wrap; gap:var(--space-2); margin-bottom:var(--space-8);">
         <span class="label" style="align-self:center; margin-right:var(--space-1);">Derived skills:</span>
-        ${DERIVED_SKILLS.map((s, i) => {
+        ${student.derivedSkills.map((s, i) => {
           const level = i < 4 ? 'expert' : i < 7 ? 'advanced' : 'intermediate';
           return `<span class="skill-tag" data-level="${level}" style="font-size:11px;">${s}</span>`;
         }).join('')}
@@ -133,22 +149,22 @@ export function renderDashboard(activeTab = 'overview') {
       <!-- Stats grid -->
       <div class="stats-grid stagger-in" id="stats-grid">
         <div class="stat-block">
-          <div class="stat-value">4</div>
+          <div class="stat-value">${student.activeProjects}</div>
           <div class="stat-label">Active Projects</div>
           <div class="stat-change text-accent">↑ 1 this month</div>
         </div>
         <div class="stat-block">
-          <div class="stat-value">47</div>
+          <div class="stat-value">${student.tasksCompleted}</div>
           <div class="stat-label">Tasks Completed</div>
           <div class="stat-change text-accent">↑ 8 this week</div>
         </div>
         <div class="stat-block">
-          <div class="stat-value">12</div>
+          <div class="stat-value">${student.verifiedContributions}</div>
           <div class="stat-label">Verified Contributions</div>
           <div class="stat-change text-accent">↑ 3 this month</div>
         </div>
         <div class="stat-block">
-          <div class="stat-value">92<span style="font-size:var(--text-lg);">%</span></div>
+          <div class="stat-value">${student.globalScore}<span style="font-size:var(--text-lg);">%</span></div>
           <div class="stat-label">Global Contrib. Score</div>
           <div class="stat-change text-accent">Excellent</div>
         </div>
@@ -165,7 +181,7 @@ export function renderDashboard(activeTab = 'overview') {
           </div>
         </div>
         <div style="overflow-x:auto;">
-          ${renderHeatmap()}
+          ${renderHeatmap(studentId)}
         </div>
       </div>
 
@@ -179,13 +195,13 @@ export function renderDashboard(activeTab = 'overview') {
           </button>
         </div>
         <div style="display:flex; flex-direction:column; gap:var(--space-3);" class="stagger-in">
-          ${PROJECTS.map(p => `
+          ${student.projects.map(p => `
             <a href="${p.href}" class="project-card liquid-glass-border" id="project-${p.name.toLowerCase().replace(/\s+/g, '-')}">
               <div class="project-icon" style="background:${p.iconBg};">${p.icon}</div>
               <div class="project-info">
                 <div class="project-name">
                   ${p.name}
-                  <span class="role-tag role-${p.role.toLowerCase()}">${p.role}</span>
+                  <span class="role-tag role-${p.role.toLowerCase().replace(/\s/g, '-')}">${p.role}</span>
                 </div>
                 <div class="project-meta">
                   <span>${p.team} members</span>
@@ -195,15 +211,15 @@ export function renderDashboard(activeTab = 'overview') {
                   <span>${p.lastActivity}</span>
                 </div>
                 <!-- Breakdown bar -->
-                <div class="breakdown-bar" title="FE ${p.breakdown.fe}% · BE ${p.breakdown.be}% · AI ${p.breakdown.ai}%">
-                  <div class="bb-fe" style="width:${p.breakdown.fe}%;"></div>
-                  <div class="bb-be" style="width:${p.breakdown.be}%;"></div>
-                  <div class="bb-ai" style="width:${p.breakdown.ai}%;"></div>
+                <div class="breakdown-bar" title="FE ${p.breakdown.fe || 0}% · BE ${p.breakdown.be || 0}% · AI ${p.breakdown.ai || 0}%">
+                  <div class="bb-fe" style="width:${p.breakdown.fe || 0}%;"></div>
+                  <div class="bb-be" style="width:${p.breakdown.be || 0}%;"></div>
+                  <div class="bb-ai" style="width:${p.breakdown.ai || 0}%;"></div>
                 </div>
                 <div style="display:flex; gap:var(--space-3); margin-top:2px;">
-                  <span style="font-size:10px; color:var(--accent-blue);">FE ${p.breakdown.fe}%</span>
-                  <span style="font-size:10px; color:var(--accent-green);">BE ${p.breakdown.be}%</span>
-                  <span style="font-size:10px; color:var(--accent-purple);">AI ${p.breakdown.ai}%</span>
+                  <span style="font-size:10px; color:var(--accent-blue);">FE ${p.breakdown.fe || 0}%</span>
+                  <span style="font-size:10px; color:var(--accent-green);">BE ${p.breakdown.be || 0}%</span>
+                  <span style="font-size:10px; color:var(--accent-purple);">AI ${p.breakdown.ai || 0}%</span>
                 </div>
               </div>
               <div class="project-contrib">
@@ -239,7 +255,7 @@ export function renderDashboard(activeTab = 'overview') {
   }
 
   return `
-    <div class="dashboard-layout" style="background:transparent;">
+    <div class="dashboard-layout" style="background:transparent; padding-top: 100px;">
       ${renderSidebar(activeTab)}
       <div class="dash-main page-enter">
         ${mainContent}
@@ -247,3 +263,50 @@ export function renderDashboard(activeTab = 'overview') {
     </div>
   `;
 }
+
+export function initDashboardInteractions() {
+  const syncBtn = document.getElementById('btn-sync-github');
+  const userInp = document.getElementById('github-username-input');
+
+  if (syncBtn && userInp) {
+    syncBtn.addEventListener('click', async () => {
+      const username = userInp.value.trim();
+      if (!username) return;
+      
+      const prevText = syncBtn.innerText;
+      syncBtn.innerText = 'Syncing...';
+      syncBtn.disabled = true;
+
+      try {
+        const res = await fetch(`https://api.github.com/users/${username}`);
+        if (!res.ok) {
+          if (res.status === 404) throw new Error('User not found. Check for typos!');
+          if (res.status === 403) throw new Error('GitHub API rate limit exceeded.');
+          throw new Error('GitHub API error.');
+        }
+        const data = await res.json();
+        
+        document.getElementById('github-result-container').style.display = 'block';
+        document.getElementById('github-avatar').src = data.avatar_url;
+        document.getElementById('github-name').innerText = data.name || data.login;
+        document.getElementById('github-login').innerText = '@' + data.login;
+        document.getElementById('github-bio').innerText = data.bio || 'No bio provided.';
+        document.getElementById('github-repos').innerText = data.public_repos;
+        document.getElementById('github-followers').innerText = data.followers;
+      } catch (err) {
+        alert(err.message);
+        document.getElementById('github-result-container').style.display = 'none';
+      } finally {
+        syncBtn.innerText = prevText;
+        syncBtn.disabled = false;
+      }
+    });
+
+    userInp.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') {
+        syncBtn.click();
+      }
+    });
+  }
+}
+

@@ -1,6 +1,10 @@
 import { renderFooter } from '../components/footer.js';
+import { AUTH } from '../utils/auth.js';
 
 export function renderLanding() {
+  const isStudent = AUTH.getRole() === 'student';
+  const isLoggedIn = AUTH.isAuthenticated();
+
   return `
     <!-- ═══ HERO ═══ -->
     <section class="hero" id="hero">
@@ -26,15 +30,23 @@ export function renderLanding() {
           </p>
 
           <div class="hero-ctas" data-scroll-reveal>
-            <a href="#/auth" class="btn btn-primary btn-lg" id="hero-cta-start">
-              Get Started
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </a>
-            <a href="#/recruiter" class="btn btn-secondary btn-lg" id="hero-cta-explore">
-              Explore Ecosystem
-            </a>
+            ${isLoggedIn ? `
+              <a href="#/${AUTH.getRole() === 'recruiter' ? 'recruiter/evaluation' : 'dashboard/overview'}" class="btn btn-primary btn-lg" id="hero-cta-start">
+                Access Dashboard
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </a>
+            ` : `
+              <a href="#/auth" class="btn btn-primary btn-lg" id="hero-cta-start">
+                Get Started
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </a>
+              <a href="#/recruiter" class="btn btn-secondary btn-lg" id="hero-cta-explore">
+                Explore Ecosystem
+              </a>
+            `}
           </div>
 
+          ${isLoggedIn ? `
           <div class="hero-hash" data-scroll-reveal>
             <div class="hash-display">
               <svg class="hash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
@@ -42,6 +54,7 @@ export function renderLanding() {
             </div>
             <span class="hash-label">Recent ledger entry</span>
           </div>
+          ` : ''}
         </div>
       </div>
     </section>
@@ -210,16 +223,6 @@ export function renderLanding() {
       </div>
     </section>
 
-    <section class="cta-section" id="cta">
-      <div class="container">
-        <h2 class="font-heading" data-blur-text>Build your contribution passport now.</h2>
-        <p style="margin-bottom: var(--space-8);">Track your work. Generate proof. Share instantly.</p>
-        <div class="hero-ctas" style="justify-content: center;">
-          <a href="#/auth" class="btn btn-primary btn-lg">Get Started</a>
-          <a href="#/recruiter" class="btn btn-secondary btn-lg">View Verified Ecosystem</a>
-        </div>
-      </div>
-    </section>
 
     ${renderFooter()}
   `;
@@ -260,5 +263,15 @@ function renderMiniPassport() {
 }
 
 export function initLandingInteractions() {
-  // Logic removed as per CTA upgrade
+  const pendingScroll = localStorage.getItem('pendingScroll');
+  if (pendingScroll) {
+    localStorage.removeItem('pendingScroll');
+    setTimeout(() => {
+      const target = document.getElementById(pendingScroll);
+      if (target) {
+        const top = target.getBoundingClientRect().top + window.scrollY - 100;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    }, 100);
+  }
 }

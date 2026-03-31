@@ -1,6 +1,7 @@
 // ── SkillX Navigation Components ──
 
 import { AUTH } from '../utils/auth.js';
+import { STUDENTS_DATA } from '../data/students.js';
 
 const ICONS = {
   grid: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
@@ -17,6 +18,14 @@ const ICONS = {
 export function renderNav(currentPage = '/') {
   const role = AUTH.getRole();
   const isLoggedIn = !!role;
+  const user = AUTH.getUser();
+  const student = user?.id ? STUDENTS_DATA[user.id] : STUDENTS_DATA[1];
+  const initials = role === 'recruiter' ? 'RX' : student.initials;
+  const userName = role === 'recruiter' ? (user?.name || 'Recruiter') : student.name;
+  const userSub = role === 'recruiter' ? (user?.company || 'hiring@skillx.io') : student.email;
+  
+  const dashboardHref = role === 'recruiter' ? '#/recruiter/evaluation' : '#/dashboard/overview';
+  const settingsHref = role === 'recruiter' ? '#/recruiter/settings' : '#/dashboard/settings';
 
   let navLinks = '';
   
@@ -76,7 +85,68 @@ export function renderNav(currentPage = '/') {
                 <a href="#/auth" class="btn btn-primary btn-sm">Get Started</a>
               </div>
             `
-            : `<div class="avatar" style="background: ${role === 'recruiter' ? 'var(--accent-purple)' : '#7C3AED'}; font-size: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);" id="nav-user-avatar">RS</div>`
+            : `
+              <div style="position: relative;" id="nav-dropdown-container">
+                <div class="avatar" style="background: ${role === 'recruiter' ? 'var(--accent-purple)' : '#7C3AED'}; font-size: 12px; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 2px 8px rgba(0,0,0,0.05);" id="nav-user-avatar">${initials}</div>
+                <div class="nav-dropdown" id="nav-user-dropdown">
+                  <div class="dropdown-header">
+                    <div style="font-weight:600; font-family: 'Space Grotesk', sans-serif; color: var(--text-primary); font-size: 14px;">${userName}</div>
+                    <div style="font-size:11px; color:var(--text-tertiary); margin-top:2px;">${userSub}</div>
+                  </div>
+                  <a href="${dashboardHref}" class="dropdown-item">Dashboard</a>
+                  <a href="${settingsHref}" class="dropdown-item">Account Settings</a>
+                  <a href="#/" class="dropdown-item" id="nav-logout-btn" onclick="localStorage.removeItem('skillx_role'); localStorage.removeItem('skillx_user'); window.location.hash='/'; setTimeout(()=>window.location.reload(), 50);" style="color: #ef4444; margin-top: 4px;">Log out</a>
+                </div>
+              </div>
+              <style>
+                .nav-dropdown {
+                  position: absolute;
+                  top: calc(100% + 12px);
+                  right: 0;
+                  background: #fff;
+                  border: 1px solid rgba(0,0,0,0.08);
+                  border-radius: var(--radius-xl);
+                  box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+                  width: 220px;
+                  opacity: 0;
+                  visibility: hidden;
+                  transform: translateY(-8px);
+                  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                  z-index: 1000;
+                  text-align: left;
+                  overflow: hidden;
+                }
+                .nav-dropdown.show {
+                  opacity: 1;
+                  visibility: visible;
+                  transform: translateY(0);
+                }
+                .dropdown-header {
+                  padding: var(--space-4);
+                  background: rgba(0,0,0,0.01);
+                  border-bottom: 1px solid rgba(0,0,0,0.04);
+                }
+                .dropdown-item {
+                  display: flex;
+                  padding: var(--space-3) var(--space-4);
+                  color: var(--text-secondary);
+                  text-decoration: none;
+                  font-size: 13px;
+                  transition: background 0.2s, color 0.2s;
+                }
+                .dropdown-item:hover {
+                  background: rgba(0,0,0,0.03);
+                  color: var(--text-primary);
+                }
+                .dropdown-item:last-child {
+                  border-top: 1px solid rgba(0,0,0,0.04);
+                  background: #fffafA;
+                }
+                .dropdown-item:last-child:hover {
+                  background: #fee2e2;
+                }
+              </style>
+            `
           }
           <button class="nav-mobile-toggle" id="nav-mobile-toggle">${ICONS.menu}</button>
         </div>
@@ -106,22 +176,45 @@ export function initNavInteractions() {
         window.scrollTo({ top, behavior: 'smooth' });
         // Close mobile nav if open
         if (links) links.classList.remove('mobile-open');
+      } else {
+        // Not on landing page, set pending scroll and navigate home
+        localStorage.setItem('pendingScroll', targetId);
+        if (links) links.classList.remove('mobile-open');
+        window.location.hash = '/';
       }
     });
   });
 
   const avatar = document.getElementById('nav-user-avatar');
-  if (avatar) {
-    avatar.addEventListener('click', () => {
-      if (confirm('Switch role? This will log you out.')) {
-        AUTH.logout();
+  const dropdown = document.getElementById('nav-user-dropdown');
+  const logoutBtn = document.getElementById('nav-logout-btn');
+
+  if (avatar && dropdown) {
+    avatar.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!avatar.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('show');
       }
+    });
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      AUTH.logout();
     });
   }
 }
 
 export function renderSidebar(activePage = 'overview') {
   const role = AUTH.getRole();
+  const user = AUTH.getUser();
+  const student = user?.id ? STUDENTS_DATA[user.id] : STUDENTS_DATA[1];
+  
   let items = [];
 
   if (role === 'recruiter') {
@@ -135,11 +228,15 @@ export function renderSidebar(activePage = 'overview') {
     items = [
       { id: 'overview', label: 'Overview', icon: ICONS.grid, href: '#/dashboard/overview' },
       { id: 'projects', label: 'Projects', icon: ICONS.folder, href: '#/project/skillx-platform' },
-      { id: 'passport', label: 'Passport', icon: ICONS.passport, href: '#/passport/reyyan-sayyed' },
+      { id: 'passport', label: 'Passport', icon: ICONS.passport, href: `#/passport/${student.name.toLowerCase().replace(/\s+/g, '-')}` },
       { id: 'report', label: 'Skill Report', icon: ICONS.report, href: '#/skill-report' },
       { id: 'settings', label: 'Settings', icon: ICONS.settings, href: '#/dashboard/settings' },
     ];
   }
+
+  const name = role === 'recruiter' ? 'Recruiter' : student.name;
+  const email = role === 'recruiter' ? 'hiring@skillx.io' : student.email;
+  const initials = role === 'recruiter' ? 'RX' : student.initials;
 
   return `
     <aside class="sidebar" id="sidebar">
@@ -153,10 +250,10 @@ export function renderSidebar(activePage = 'overview') {
         `).join('')}
       </div>
       <div class="sidebar-user">
-        <div class="avatar" style="background: ${role === 'recruiter' ? 'var(--accent-purple)' : '#7C3AED'}; font-size: 12px;">RS</div>
+        <div class="avatar" style="background: ${role === 'recruiter' ? 'var(--accent-purple)' : '#7C3AED'}; font-size: 12px;">${initials}</div>
         <div class="sidebar-user-info">
-          <div class="sidebar-user-name">Reyyan Sayyed</div>
-          <div class="sidebar-user-email">${role === 'recruiter' ? 'hiring@skillx.io' : 'reyyan@skillx.io'}</div>
+          <div class="sidebar-user-name">${name}</div>
+          <div class="sidebar-user-email">${email}</div>
         </div>
         <button class="btn-ghost btn-icon" id="btn-logout" title="Logout" style="margin-left:auto; color:var(--text-tertiary);">
           ${ICONS.logout}

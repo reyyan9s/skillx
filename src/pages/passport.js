@@ -1,71 +1,22 @@
 import QRCode from 'qrcode';
+import { AUTH } from '../utils/auth.js';
+import { STUDENTS_DATA } from '../data/students.js';
 
-const PASSPORT_DATA = {
-  name: 'Reyyan Sayyed',
-  initials: 'RS',
-  tagline: 'Systems & Backend Architecture',
-  hash: 'SKX-2026-PROJECT-SKILLX-a7f3c2e8',
-  generated: '2026-03-30T08:00:00Z',
-  globalScore: 92,
-  summary: `Based on verified cryptographic logs, Reyyan operates as a high-impact backend engineer with a strong focus on system infrastructure and authentication. Over the last 12 months, they have consistently owned 35-45% contribution weight on core engine tasks across 4 teams. Verified evidence suggests senior-level proficiency in Node.js, TypeScript, and architectural design.`,
-  contributions: [
-    {
-      project: 'SkillX Platform',
-      task: 'Built authentication system with JWT + OAuth',
-      skills: ['React', 'Node.js', 'JWT'],
-      weight: 35,
-      date: 'Mar 28, 2026',
-      hash: 'SKX-a7f3c2e8',
-      strength: 'strong',
-    },
-    {
-      project: 'SkillX Platform',
-      task: 'Designed and implemented contribution tracking engine',
-      skills: ['TypeScript', 'PostgreSQL', 'Redis'],
-      weight: 42,
-      date: 'Mar 27, 2026',
-      hash: 'SKX-e1b9c4d2',
-      strength: 'strong',
-    },
-    {
-      project: 'SkillX Platform',
-      task: 'Created RESTful API endpoint architecture',
-      skills: ['Express', 'REST', 'OpenAPI'],
-      weight: 30,
-      date: 'Mar 25, 2026',
-      hash: 'SKX-d3f7a6c1',
-      strength: 'medium',
-    },
-    {
-      project: 'WasteWise',
-      task: 'Designed route optimization algorithm',
-      skills: ['Python', 'ML', 'NetworkX'],
-      weight: 28,
-      date: 'Mar 22, 2026',
-      hash: 'SKX-f4a2b8c3',
-      strength: 'strong',
-    },
-    {
-      project: 'Posturely',
-      task: 'Trained posture detection ML model',
-      skills: ['Python', 'TensorFlow', 'MediaPipe'],
-      weight: 45,
-      date: 'Mar 15, 2026',
-      hash: 'SKX-h5c3a2b6',
-      strength: 'strong',
-    },
-  ],
-  skills: [
-    { name: 'React', level: 92, type: 'verified' },
-    { name: 'Node.js', level: 88, type: 'verified' },
-    { name: 'Python', level: 82, type: 'verified' },
-    { name: 'TypeScript', level: 78, type: 'verified' },
-    { name: 'PostgreSQL', level: 75, type: 'verified' },
-    { name: 'Machine Learning', level: 65, type: 'claimed' },
-    { name: 'System Design', level: 70, type: 'verified' },
-    { name: 'DevOps', level: 45, type: 'claimed' },
-  ],
-};
+function getPassportData(slug) {
+  if (slug) {
+    const targetSlug = slug.toLowerCase().replace('#/passport/', '');
+    for (const key in STUDENTS_DATA) {
+      const studentSlug = STUDENTS_DATA[key].name.toLowerCase().replace(/\s+/g, '-');
+      if (studentSlug === targetSlug) {
+        return STUDENTS_DATA[key];
+      }
+    }
+  }
+
+  const user = AUTH.getUser();
+  const studentId = user && user.id ? user.id : 1;
+  return STUDENTS_DATA[studentId] || STUDENTS_DATA[1];
+}
 
 function renderRadarChart(skills) {
   const width = 420;
@@ -185,10 +136,10 @@ function skillLevel(level) {
 }
 
 export function renderPassport(slug) {
-  const d = PASSPORT_DATA;
+  const d = getPassportData(slug);
 
   return `
-    <div class="passport-page" style="background:transparent; padding: var(--space-12) 0;">
+    <div class="passport-page" style="background:transparent; padding: var(--space-32) 0 var(--space-12);">
       <div style="max-width: 960px; margin: 0 auto var(--space-4); display: flex; justify-content: space-between; align-items: center;">
         <a href="#/dashboard" class="btn btn-ghost btn-sm" style="font-family:var(--font-body);">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -244,7 +195,7 @@ export function renderPassport(slug) {
             </div>
           </div>
           <div style="width: 200px; padding: var(--space-6); background: rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-            <canvas id="passport-qr-canvas" width="80" height="80" style="margin-bottom: var(--space-3); mix-blend-mode: multiply;"></canvas>
+            <canvas id="passport-qr-canvas" width="80" height="80" style="margin-bottom: var(--space-3); border-radius: var(--radius-sm); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);"></canvas>
             <div style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color:var(--text-secondary);">Scan to Verify Record</div>
           </div>
         </div>
@@ -341,13 +292,20 @@ export function renderPassport(slug) {
 }
 
 export async function initPassportInteractions() {
+  const slug = window.location.hash;
   const canvas = document.getElementById('passport-qr-canvas');
   if (canvas) {
     try {
-      await QRCode.toCanvas(canvas, `${window.location.origin}/#/verify/${PASSPORT_DATA.hash}`, {
-        width: 60,
-        margin: 0,
-        color: { dark: '#16A34A', light: '#ffffff00' },
+      // If we are testing locally, tell the phone to look for the laptop network IP, otherwise grab production domain!
+      let verificationHost = window.location.origin;
+      if (verificationHost.includes('localhost') || verificationHost.includes('127.0.0.1')) {
+        verificationHost = 'http://10.130.194.232:5173';
+      }
+
+      await QRCode.toCanvas(canvas, `${verificationHost}/#/verify/${getPassportData(slug).hash}`, {
+        width: 80,
+        margin: 1,
+        color: { dark: '#000000', light: '#ffffff' },
       });
     } catch (e) {
       console.error('QR generation failed:', e);

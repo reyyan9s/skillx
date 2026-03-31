@@ -12,7 +12,7 @@ import './styles/dashboard.css';
 import { Router } from './router.js';
 import { renderNav, initNavInteractions } from './components/nav.js';
 import { renderLanding, initLandingInteractions } from './pages/landing.js';
-import { renderDashboard } from './pages/dashboard.js';
+import { renderDashboard, initDashboardInteractions } from './pages/dashboard.js';
 import { renderProject, initProjectInteractions } from './pages/project.js';
 import { renderPassport, initPassportInteractions } from './pages/passport.js';
 import { renderVerify } from './pages/verify.js';
@@ -105,7 +105,10 @@ router.on('/dashboard', (tab) => {
   protect('student', () => {
     mount(
       renderNav('/dashboard') + renderDashboard(tab || 'overview'),
-      () => initNavInteractions()
+      () => {
+        initNavInteractions();
+        initDashboardInteractions();
+      }
     );
   });
 });

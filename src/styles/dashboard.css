@@ -1,10 +1,6 @@
 /* ── Dashboard & Internal UI System ── */
 
-.dashboard-layout {
-  display: flex;
-  min-height: 100vh;
-  padding-top: var(--nav-height);
-}
+
 
 .dash-main {
   flex: 1;

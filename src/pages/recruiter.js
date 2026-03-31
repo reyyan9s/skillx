@@ -1,39 +1,18 @@
 // ── Recruiter Dashboard ──
 
 import { renderSidebar } from '../components/nav.js';
+import { STUDENTS_DATA } from '../data/students.js';
 
-const NETWORK_CANDIDATES = [
-  { 
-    name: 'Reyyan Sayyed', 
-    initials: 'RS', 
-    score: 92, 
-    contributions: 12, 
-    skills: ['React', 'Node.js', 'Python'],
-    identity: 'Backend-heavy systems contributor',
-    hash: 'SKX-a7f3c2e8',
-    slug: 'reyyan-sayyed'
-  },
-  { 
-    name: 'Aria Chen', 
-    initials: 'AC', 
-    score: 88, 
-    contributions: 9, 
-    skills: ['Rust', 'Distributed Systems', 'Go'],
-    identity: 'Full-stack infrastructure engineer',
-    hash: 'SKX-b2d4f1a3',
-    slug: 'aria-chen'
-  },
-  { 
-    name: 'Marcus Johnson', 
-    initials: 'MJ', 
-    score: 84, 
-    contributions: 15, 
-    skills: ['React', 'D3.js', 'Figma'],
-    identity: 'Data visualization specialist',
-    hash: 'SKX-c9e8d5b7',
-    slug: 'marcus-johnson'
-  }
-];
+const NETWORK_CANDIDATES = Object.values(STUDENTS_DATA).map(s => ({
+  name: s.name, 
+  initials: s.initials, 
+  score: s.globalScore, 
+  contributions: s.verifiedContributions, 
+  skills: s.derivedSkills.slice(0, 3),
+  identity: s.identity,
+  hash: s.hash,
+  slug: s.name.toLowerCase().replace(/\s+/g, '-')
+}));
 
 export function renderRecruiter(activeTab = 'evaluation') {
   let mainContent = '';
@@ -117,14 +96,34 @@ export function renderRecruiter(activeTab = 'evaluation') {
           <p style="font-size: 11px; color: var(--accent-green); margin-top: 8px;">Connected & Active</p>
         </div>
 
+        <style>
+          .setting-toggle {
+            width: 44px; height: 24px; border-radius: 12px; position:relative; cursor:pointer; 
+            transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            background: var(--border-strong);
+          }
+          .setting-toggle.active {
+            background: var(--accent-green);
+          }
+          .setting-toggle-knob {
+            width: 20px; height: 20px; background: white; position: absolute; left: 2px; top: 2px;
+            border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateX(0);
+          }
+          .setting-toggle.active .setting-toggle-knob {
+            transform: translateX(20px);
+          }
+        </style>
+        
         <div style="margin-bottom: var(--space-8); border-bottom: 1px solid var(--border-subtle); padding-bottom: var(--space-6);">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
               <div style="font-weight: 600; font-size: var(--text-base);">Automated Evaluation Triggers</div>
               <div style="color: var(--text-tertiary); font-size: 13px; margin-top: 4px;">Trigger new background pull every 30 days</div>
             </div>
-            <div style="width: 44px; height: 24px; background: var(--accent-green); border-radius: 12px; position:relative; cursor:pointer;">
-              <div style="width:20px; height:20px; background:white; position:absolute; right:2px; top:2px; border-radius:50%; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"></div>
+            <div class="setting-toggle active" onclick="this.classList.toggle('active')">
+              <div class="setting-toggle-knob"></div>
             </div>
           </div>
         </div>
@@ -135,13 +134,13 @@ export function renderRecruiter(activeTab = 'evaluation') {
               <div style="font-weight: 600; font-size: var(--text-base);">Strict Node Auditing</div>
               <div style="color: var(--text-tertiary); font-size: 13px; margin-top: 4px;">Only surface candidates with &gt;90% cryptographic confidence</div>
             </div>
-            <div style="width: 44px; height: 24px; background: var(--border-strong); border-radius: 12px; position:relative; cursor:pointer;">
-              <div style="width:20px; height:20px; background:white; position:absolute; left:2px; top:2px; border-radius:50%; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"></div>
+            <div class="setting-toggle" onclick="this.classList.toggle('active')">
+              <div class="setting-toggle-knob"></div>
             </div>
           </div>
         </div>
 
-        <button class="btn btn-primary">Save Configuration</button>
+        <button class="btn btn-primary" onclick="alert('Network settings configuration saved successfully!');">Save Configuration</button>
       </div>
     `;
   } else {
@@ -184,7 +183,7 @@ export function renderRecruiter(activeTab = 'evaluation') {
                   <div class="avatar avatar-lg" style="background: var(--bg-dark); color: white; border-radius: var(--radius-md); font-family: var(--font-display); font-weight: 700;">${c.initials}</div>
                   <div>
                     <div class="font-heading" style="font-size: var(--text-xl);">${c.name}</div>
-                    <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); text-transform: uppercase;">VERIFIED NODE: ${c.hash.split('-')[1]}</div>
+                    <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); text-transform: uppercase;">VERIFIED NODE: ${c.hash.split('-').pop()}</div>
                   </div>
                 </div>
                 <div style="text-align: right;">
