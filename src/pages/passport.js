@@ -139,6 +139,31 @@ export function renderPassport(slug) {
   const d = getPassportData(slug);
 
   return `
+    <style>
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        #passport-doc, #passport-doc * {
+          visibility: visible;
+        }
+        #passport-doc {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          margin: 0 !important;
+          border: none !important;
+          box-shadow: none !important;
+        }
+        /* Force color backgrounds */
+        * {
+          -webkit-print-color-adjust: exact !important;
+          color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+      }
+    </style>
     <div class="passport-page" style="background:transparent; padding: var(--space-32) 0 var(--space-12);">
       <div style="max-width: 960px; margin: 0 auto var(--space-4); display: flex; justify-content: space-between; align-items: center;">
         <a href="#/dashboard" class="btn btn-ghost btn-sm" style="font-family:var(--font-body);">
@@ -150,7 +175,7 @@ export function renderPassport(slug) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
             Copy Link
           </button>
-          <button class="btn btn-primary btn-sm">
+          <button class="btn btn-primary btn-sm" id="passport-download">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Download PDF
           </button>
@@ -320,6 +345,13 @@ export async function initPassportInteractions() {
         shareBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
         setTimeout(() => { shareBtn.innerHTML = original; }, 2000);
       });
+    });
+  }
+
+  const downloadBtn = document.getElementById('passport-download');
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', () => {
+      window.print();
     });
   }
 
