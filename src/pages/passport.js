@@ -226,6 +226,7 @@ function generateSystemAssessment(d) {
 
 export function renderPassport(slug) {
   const d = getPassportData(slug);
+  const isRecruiter = AUTH.getRole() === 'recruiter';
 
   return `
     <style>
@@ -322,7 +323,18 @@ export function renderPassport(slug) {
 
         <div style="padding: var(--space-6);">
           <!-- SYSTEM EVALUATION -->
-          ${generateSystemAssessment(d)}
+          <div id="evaluation-container">
+            ${isRecruiter ? `
+              <div style="border: 1px dashed var(--border-strong); background: rgba(0,0,0,0.02); padding: var(--space-8); margin-bottom: var(--space-8); text-align: center; border-radius: var(--radius-lg);">
+                <div style="font-size: 10px; color: var(--accent-purple); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: var(--space-2);">Recruiter Action Required</div>
+                <div style="margin-bottom: var(--space-4); font-family: var(--font-heading); font-size: 18px; color: var(--text-primary);">Run AI Evaluation</div>
+                <button class="btn btn-primary" id="btn-run-eval">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  Generate Recruiter Assessment
+                </button>
+              </div>
+            ` : generateSystemAssessment(d)}
+          </div>
 
           <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: var(--space-8);">
             
@@ -444,4 +456,16 @@ export async function initPassportInteractions() {
       setTimeout(() => { bar.style.width = width; }, 100);
     });
   });
+
+  const evalBtn = document.getElementById('btn-run-eval');
+  if (evalBtn) {
+    evalBtn.addEventListener('click', () => {
+      const container = document.getElementById('evaluation-container');
+      container.innerHTML = `<div style="border: 1px solid var(--border-strong); background: rgba(0,0,0,0.02); padding: var(--space-8); margin-bottom: var(--space-8); text-align: center; border-radius: var(--radius-lg);"><span class="spinner" style="border-color:var(--accent-purple); border-right-color:transparent; width:32px; height:32px; border-width:3px; margin-bottom:var(--space-4);"></span><div style="font-family:var(--font-mono); font-size:10px; color:var(--accent-purple); text-transform:uppercase; letter-spacing:0.1em;">Compiling Intelligence...</div></div>`;
+      
+      setTimeout(() => {
+        container.innerHTML = generateSystemAssessment(getPassportData(slug));
+      }, 1500);
+    });
+  }
 }
