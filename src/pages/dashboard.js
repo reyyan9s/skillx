@@ -104,12 +104,21 @@ export function renderDashboard(activeTab = 'overview') {
               <div>
                   <div id="github-name" class="font-heading" style="font-size: var(--text-lg);"></div>
                   <div id="github-login" style="font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary);"></div>
+                  <div id="github-joined" style="font-size: 10px; color: var(--text-tertiary); margin-top: 2px;"></div>
               </div>
            </div>
            <div id="github-bio" style="font-size: 13px; color: var(--text-secondary); margin-top: var(--space-4);"></div>
-           <div style="display: flex; gap: var(--space-4); margin-top: var(--space-4); font-size: 12px; color: var(--text-primary); font-family: var(--font-mono);">
+           
+           <div style="display: flex; flex-direction: column; gap: 4px; margin-top: var(--space-3); font-size: 12px; color: var(--text-secondary);">
+             <div id="github-company" style="display: none;">🏢 <span id="github-company-text"></span></div>
+             <div id="github-location" style="display: none;">📍 <span id="github-location-text"></span></div>
+           </div>
+
+           <div style="display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-4); font-size: 12px; color: var(--text-primary); font-family: var(--font-mono); border-top: 1px solid var(--border-subtle); padding-top: var(--space-4);">
               <div><span style="font-weight:700; color:var(--accent-green);" id="github-repos"></span> Repos</div>
+              <div><span style="font-weight:700; color:var(--accent-green);" id="github-gists"></span> Gists</div>
               <div><span style="font-weight:700; color:var(--accent-green);" id="github-followers"></span> Followers</div>
+              <div><span style="font-weight:700; color:var(--accent-green);" id="github-following"></span> Following</div>
            </div>
         </div>
       </div>
@@ -290,9 +299,27 @@ export function initDashboardInteractions() {
         document.getElementById('github-avatar').src = data.avatar_url;
         document.getElementById('github-name').innerText = data.name || data.login;
         document.getElementById('github-login').innerText = '@' + data.login;
+        document.getElementById('github-joined').innerText = 'Joined ' + new Date(data.created_at).getFullYear();
         document.getElementById('github-bio').innerText = data.bio || 'No bio provided.';
+        
+        if (data.company) {
+          document.getElementById('github-company').style.display = 'block';
+          document.getElementById('github-company-text').innerText = data.company;
+        } else {
+          document.getElementById('github-company').style.display = 'none';
+        }
+        
+        if (data.location) {
+          document.getElementById('github-location').style.display = 'block';
+          document.getElementById('github-location-text').innerText = data.location;
+        } else {
+          document.getElementById('github-location').style.display = 'none';
+        }
+
         document.getElementById('github-repos').innerText = data.public_repos;
+        document.getElementById('github-gists').innerText = data.public_gists;
         document.getElementById('github-followers').innerText = data.followers;
+        document.getElementById('github-following').innerText = data.following;
       } catch (err) {
         alert(err.message);
         document.getElementById('github-result-container').style.display = 'none';
